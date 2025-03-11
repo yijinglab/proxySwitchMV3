@@ -1,0 +1,30 @@
+{
+  "name": "浏览器代理切换器",
+  "version": "1.0",
+  "description": "一个简单的Chrome代理切换扩展",
+  "manifest_version": 3,
+  "permissions": [
+    "proxy",
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "images/icon16.png",
+      "48": "images/icon48.png",
+      "128": "images/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "images/icon16.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
+  }
+}

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>代理切换器</title>
+  <style>
+    body {
+      width: 300px;
+      height: 400px;        /* 设置固定高度 */
+      font-family: Arial, sans-serif;
+      padding: 10px;
+      margin: 0;           /* 移除默认边距 */
+      box-sizing: border-box;
+      display: flex;       /* 使用flex布局 */
+      flex-direction: column;
+    }
+    
+    h2 {
+      margin-top: 0;      /* 移除标题上边距 */
+      margin-bottom: 15px;
+    }
+    
+    .proxy-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .proxy-option {
+      padding: 10px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      cursor: pointer;
+      background: #fff;
+      width: 100%;
+      text-align: left;
+    }
+    
+    .proxy-option:hover {
+      border-color: #40a9ff;
+      color: #40a9ff;
+    }
+    
+    .proxy-option.active {
+      background-color: #e6f7ff;
+      border-color: #1890ff;
+      color: #1890ff;
+    }
+    
+    #proxy-list {
+      flex: 1;            /* 列表区域自适应填充 */
+      overflow-y: auto;   /* 允许滚动 */
+    }
+    
+    .controls {
+      margin-top: auto;   /* 控制按钮固定在底部 */
+      padding-top: 10px;
+      border-top: 1px solid #eee;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 300px;       /* 与body同宽 */
+      height: 400px;      /* 与body同高 */
+      background-color: #fff;
+      z-index: 1000;
+    }
+    
+    .modal-content {
+      height: 100%;       /* 填充整个modal */
+      padding: 15px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .back-button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+    }
+    
+    #proxy-form {
+      flex: 1;
+      overflow-y: auto;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    
+    input, select {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+    }
+    
+    .form-buttons {
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid #eee;
+      text-align: right;
+    }
+    
+    .proxy-item {
+      padding: 10px;
+      margin: 5px 0;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative; /* 添加相对定位 */
+    }
+    
+    .proxy-item:hover {
+      border-color: #40a9ff;
+      color: #40a9ff;
+    }
+    
+    .proxy-item.active {
+      background-color: #e6f7ff;
+      border-color: #1890ff;
+      color: #1890ff;
+    }
+
+    /* 添加新的样式 */
+    .proxy-item .proxy-name {
+      flex-grow: 1;
+      margin-right: 10px;
+    }
+
+    .proxy-item .actions {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .proxy-item .edit-btn,
+    .proxy-item .delete-btn {
+      padding: 4px 8px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      opacity: 0.7;
+    }
+
+    .proxy-item .edit-btn {
+      color: #1890ff;
+    }
+
+    .proxy-item .delete-btn {
+      color: #ff4d4f;
+    }
+
+    .proxy-item .edit-btn:hover,
+    .proxy-item .delete-btn:hover {
+      opacity: 1;
+    }
+
+    /* 工具提示样式 */
+    .proxy-item .tooltip {
+      visibility: hidden;
+      position: absolute;
+      top: 100%;  /* 改为显示在元素下方 */
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0, 0, 0, 0.75);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      z-index: 1000;
+      margin-top: 5px;  /* 添加一些上边距 */
+    }
+
+    .proxy-item:hover .tooltip {
+      visibility: visible;
+    }
+
+    /* 工具提示箭头 */
+    .proxy-item .tooltip::after {
+      content: "";
+      position: absolute;
+      bottom: 100%;  /* 改为显示在顶部 */
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: transparent transparent rgba(0, 0, 0, 0.75) transparent;  /* 改变箭头方向 */
+    }
+    
+    button {
+      padding: 8px 16px;
+      border-radius: 4px;
+      border: 1px solid #d9d9d9;
+      background: #fff;
+      cursor: pointer;
+    }
+    
+    button:hover {
+      border-color: #40a9ff;
+      color: #40a9ff;
+    }
+
+    #bypass-list {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      font-family: monospace;
+      resize: vertical;
+      min-height: 100px;
+    }
+    
+    #bypass-list:focus {
+      border-color: #40a9ff;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    }
+
+    /* 修改modal标题 */
+    .modal-header h3 {
+      margin: 0;
+      flex-grow: 1;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h2>代理配置</h2>
+  
+  <div class="proxy-options">
+    <button class="proxy-option" data-mode="direct">直接连接</button>
+    <button class="proxy-option" data-mode="system">系统代理</button>
+  </div>
+  
+  <div id="proxy-list"></div>
+  
+  <div class="controls">
+    <button id="add-proxy">添加代理</button>
+  </div>
+  
+  <div id="add-proxy-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button class="back-button">←</button>
+        <h3>添加代理配置</h3>
+        <div></div>
+      </div>
+      
+      <form id="proxy-form">
+        <div class="form-group">
+          <label for="proxy-name">代理名称</label>
+          <input type="text" id="proxy-name" required placeholder="例如：Burp">
+        </div>
+        
+        <div class="form-group">
+          <label for="proxy-scheme">代理协议</label>
+          <select id="proxy-scheme" required>
+            <option value="http">HTTP</option>
+            <option value="https">HTTPS</option>
+            <option value="socks4">SOCKS4</option>
+            <option value="socks5">SOCKS5</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="proxy-host">服务器地址</label>
+          <input 
+            type="text" 
+            id="proxy-host" 
+            required 
+            placeholder="例如：127.0.0.1"
+            pattern="^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$|^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+            title="请输入有效的IP地址或域名">
+        </div>
+        
+        <div class="form-group">
+          <label for="proxy-port">端口</label>
+          <input 
+            type="number" 
+            id="proxy-port" 
+            required 
+            min="1" 
+            max="65535" 
+            placeholder="例如：1080"
+            title="端口范围：1-65535">
+        </div>
+        
+        <div class="form-group">
+          <label for="bypass-list">不经过代理的地址列表（每行一个）</label>
+          <textarea 
+            id="bypass-list" 
+            rows="6" 
+            placeholder="支持以下格式：
+1. foobar.com、*.foobar.com、*foobar.com:99
+2. 127.0.0.1、[::1]、[::1]:80
+3. 192.168.1.1/16、fefe:13::abc/33"></textarea>
+        </div>
+        
+        <div class="form-buttons">
+          <button type="submit">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html> 
